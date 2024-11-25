@@ -15,7 +15,11 @@ C0E1 流浪地球
 */
 
 const N=100
-const manualStart = [1,55,83]
+const manualStart = {
+    0:[1,55,83],
+    3:[28],
+    5: [16,40]
+}
 
 
 const result = {}
@@ -24,7 +28,7 @@ let maxStep = 0
 function resolve(){
     const machines = Array.from({length:N}).map(()=>(0))
 
-    const nextStart = new Set(manualStart)
+    const nextStart = new Set(manualStart[0])
 
     startMachines(machines, nextStart, 0)
     console.info(Array.from(result[maxStep]))
@@ -59,6 +63,14 @@ function startMachines(machines,nextStart,step){
             }
         })
         // console.info(machines,findNext)
+        if(manualStart[step+1]){
+            const possibleStart = manualStart[step+1]
+            possibleStart.forEach(start =>{
+                if(machines[start]===0){
+                    findNext.add(start)
+                }
+            })
+        }
         startMachines(machines,findNext,step+1)
     }
 }
