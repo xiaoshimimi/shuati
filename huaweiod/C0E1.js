@@ -22,56 +22,86 @@ const manualStart = {
 }
 
 
+// const N=5
+// const manualStart = {
+//     0: [0,3]
+// }
+
+
 const result = {}
 let maxStep = 0
 
 function resolve(){
     const machines = Array.from({length:N}).map(()=>(0))
 
-    const nextStart = new Set(manualStart[0])
+    const nextStart = manualStart[0]
 
     startMachines(machines, nextStart, 0)
     console.info(Array.from(result[maxStep]))
 }
 
 function startMachines(machines,nextStart,step){
-    if(nextStart.size === 0){
-        return
-    } else {
-        if(step>maxStep){
-            maxStep = step
-        }
-        if(result[step]){
-            result[step] = result[step].union(nextStart)
-        } else {
-            result[step] = nextStart
-        }
-        const findNext = new Set()
-        nextStart.forEach(index=>{
-            machines[index]=1
-        })
-        nextStart.forEach(index=>{
-            if(index+1<machines.length && machines[index+1]===0){
-                findNext.add(index+1)
-            } else if(index+1>=machines.length && machines[0]===0){
-                findNext.add(0)
+    //initialize the queue
+    const queue = nextStart.map(start=>([start,step]))
+
+    while(queue.length > 0){
+        // console.info('queue',queue)
+
+        const candidate = new Set()
+        const usedToCalculateCandidate = []
+        // process all machine in queue
+        while(queue.length>0){
+
+            const [machine,curstep] = queue.shift()
+            usedToCalculateCandidate.push(machine)
+            if(curstep>maxStep){
+                maxStep=curstep
             }
-            if(index-1>=0 && machines[index-1]===0){
-                findNext.add(index-1)
-            } else if(index-1<0 && machines[machines.length-1]===0){
-                findNext.add(machines.length-1)
+            if(machines[machine] === 1) continue
+
+            // console.info(machine,curstep)
+            if(result[curstep]){
+                result[curstep].add(machine)
+            }else{
+                result[curstep] = new Set([machine])
             }
+
+            machines[machine] = 1
+        }
+        // calculate all candidate machines for autostart
+        while(usedToCalculateCandidate.length>0){
+            const machine = usedToCalculateCandidate.shift()
+            if(machine === 0 && machines[machines.length-1] === 0){
+                candidate.add(machines.length-1)
+            }
+            if(machine !== 0 && machines[machine-1] === 0){
+                candidate.add(machine-1)
+            }
+    
+            if(machine === machines.length-1 && machines[0] === 0){
+                candidate.add(0)
+            }
+            if(machine !== machines.length-1 && machines[machine+1] === 0){
+                candidate.add(machine+1)
+            }
+        }
+
+        // console.info('updated result',maxStep,result)
+
+        // console.info('pushing candidates',candidate,maxStep+1)
+        candidate.forEach(value=>{              // pusing autoStart
+            queue.push([value,maxStep+1])
         })
-        // console.info(machines,findNext)
-        if(manualStart[step+1]){
-            const possibleStart = manualStart[step+1]
-            possibleStart.forEach(start =>{
+
+        if(manualStart[maxStep+1]){       // fill manualStart
+            const newStart = manualStart[maxStep+1]
+            newStart.forEach(start=>{
                 if(machines[start]===0){
-                    findNext.add(start)
+                    queue.push([start,maxStep+1])
                 }
             })
         }
-        startMachines(machines,findNext,step+1)
+        
     }
 }
 
